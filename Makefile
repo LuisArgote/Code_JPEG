@@ -1,29 +1,37 @@
-# Définir le compilateur
+# Compilateur
 CC = gcc
 
-# Définir les options de compilation
-CFLAGS = -Wall -I./include
+# Flags de compilation
+CFLAGS = -Wall -Wextra $(shell pkg-config --cflags gtk4 cairo)
 
-# Définir les fichiers source
-SRC = src/main.c src/image_rgb.c src/matrice.c src/YCbCr.c
+# Librairies à lier - L'ORDRE EST CRUCIAL
+LDLIBS = $(shell pkg-config --libs gtk4 cairo)
 
-# Définir les fichiers objets
-OBJ = $(SRC:.c=.o)
+# Ajoutez cette ligne dans les flags de compilation
+CFLAGS += -Iinclude -Isrc  # Cherche les headers dans include/ et src/
 
-# Définir l'exécutable
-EXEC = my_program
+# Nom de l'exécutable
+TARGET = my_program
 
-# La règle par défaut pour construire l'exécutable
-all: $(EXEC)
+# Fichiers sources
+SRCS = src/main.c src/imageRGB.c src/matrice.c src/YCbCr.c src/graphique.c
 
-# Règle pour construire l'exécutable à partir des fichiers objets
-$(EXEC): $(OBJ)
-	$(CC) $(OBJ) -o $(EXEC)
+# Fichiers objets
+OBJS = $(SRCS:.c=.o)
 
-# Règle pour générer les fichiers objets à partir des fichiers source
+# Règle par défaut
+all: $(TARGET)
+
+# Construction de l'exécutable - Notez l'ordre des librairies
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^ $(LDLIBS)
+
+# Génération des fichiers objets
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Règle pour nettoyer les fichiers générés
+# Nettoyage
 clean:
-	rm -f $(OBJ) $(EXEC)
+	rm -f $(OBJS) $(TARGET)
+
+.PHONY: all clean

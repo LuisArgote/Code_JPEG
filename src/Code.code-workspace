@@ -65,7 +65,7 @@
 		"C_Cpp_Runner.msvcSecureNoWarnings": false,
 		"files.associations": {
 			"matrix.h": "c",
-			"image_rgb.h": "c"
+			"imageRGB.h": "c"
 		}
 	}
 }

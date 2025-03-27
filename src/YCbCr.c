@@ -1,14 +1,14 @@
 #include"YCbCr.h"
 #include<stdlib.h>
 
-YCbCrImage* RGBtoYCbCr(image_rgb* image)
+YCbCrImage* RGBtoYCbCr(imageRGB* image)
 {
     YCbCrImage* image_YCbCr = (YCbCrImage*)malloc((sizeof(YCbCrImage)));
-    image_YCbCr->pixels = (YCbCr**)malloc(sizeof(YCbCr*) * image->image_height);
-    for (int i = 0; i < image->image_height; i++)
+    image_YCbCr->pixels = (YCbCr**)malloc(sizeof(YCbCr*) * image->height);
+    for (int i = 0; i < image->height; i++)
     {
-        image_YCbCr->pixels[i] = (YCbCr*)malloc(sizeof(YCbCr) * image->image_width);
-        for (int j = 0; j < image->image_width; j++)
+        image_YCbCr->pixels[i] = (YCbCr*)malloc(sizeof(YCbCr) * image->width);
+        for (int j = 0; j < image->width; j++)
         {
             image_YCbCr->pixels[i][j].y = (unsigned char)(0.299 * image->image[i][j].red +
                                                           0.587 * image->image[i][j].green +
@@ -23,16 +23,16 @@ YCbCrImage* RGBtoYCbCr(image_rgb* image)
                                                            0.081312 * image->image[i][j].blue);
         }
     }
-    image_YCbCr->height = image->image_height;
-    image_YCbCr->width = image->image_width;
+    image_YCbCr->height = image->height;
+    image_YCbCr->width = image->width;
     return image_YCbCr;
 }
 
-image_rgb* YCbCrtoRGB(YCbCrImage* image)
+imageRGB* YCbCrtoRGB(YCbCrImage* image)
 {
-    image_rgb* resultat = (image_rgb*)malloc(sizeof(image_rgb));
-    resultat->image_height = image->height;
-    resultat->image_width = image->width;
+    imageRGB* resultat = (imageRGB*)malloc(sizeof(imageRGB));
+    resultat->height = image->height;
+    resultat->width = image->width;
     resultat->maxval = 0;
     resultat->image = (color**)malloc(sizeof(color*) * image->height);
     for (int i = 0; i < image->height; i++)

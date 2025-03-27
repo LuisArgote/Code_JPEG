@@ -11,7 +11,7 @@
                 "-I${workspaceFolderBasename}/include",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                ""
+                "$(pkg-config --cflags --libs gtk4 cairo"
             ],
             "options": {
                 "cwd": "${fileDirname}"

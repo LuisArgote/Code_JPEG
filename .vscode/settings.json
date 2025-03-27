@@ -58,8 +58,11 @@
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
   "files.associations": {
     "glob.h": "c",
-    "image_rgb.h": "c",
+    "imageRGB.h": "c",
     "ycbcr.h": "c",
-    "matrice.h": "c"
+    "matrice.h": "c",
+    "gtk.h": "c",
+    "graphique.h": "c",
+    "gtkcss.h": "c"
   }
 }
