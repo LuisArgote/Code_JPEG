@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra $(shell pkg-config --cflags gtk4 cairo)
 
 # Librairies à lier - L'ORDRE EST CRUCIAL
-LDLIBS = $(shell pkg-config --libs gtk4 cairo)
+LDLIBS = $(shell pkg-config --libs gtk4 cairo) -lm
 
 # Ajoutez cette ligne dans les flags de compilation
 CFLAGS += -Iinclude -Isrc  # Cherche les headers dans include/ et src/
@@ -14,7 +14,7 @@ CFLAGS += -Iinclude -Isrc  # Cherche les headers dans include/ et src/
 TARGET = my_program
 
 # Fichiers sources
-SRCS = src/main.c src/imageRGB.c src/matrice.c src/YCbCr.c src/graphique.c
+SRCS = src/main.c src/imageRGB.c src/matrice.c src/YCbCr.c src/graphique.c src/AC_DC.c
 
 # Fichiers objets
 OBJS = $(SRCS:.c=.o)

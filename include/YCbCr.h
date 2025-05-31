@@ -6,7 +6,7 @@
 
 // Structure pour représenter un pixel YCbCr
 typedef struct {
-    unsigned char y, Cb, Cr;
+    double y, Cb, Cr;
 } YCbCr;
 
 // Structure pour représenter une image YCbCr
@@ -42,6 +42,5 @@ void allocate_ycbcr_image(YCbCrImage *image);
 
 // Fonction pour libérer la mémoire allouée pour une image YCbCr
 void free_ycbcr_image(YCbCrImage *image);
-
 
 #endif // YCBCR_H

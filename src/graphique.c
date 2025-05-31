@@ -1,6 +1,17 @@
 #include "graphique.h"
 #include <gtk-4.0/gtk/gtk.h>
-#include <cairo/cairo.h>
+#include<cairo.h>
+#include<graphene-1.0/graphene-gobject.h>
+
+// Définition de draw_func
+static void draw_func(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer user_data) {
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_paint(cr);
+
+    cairo_set_source_rgb(cr, 1, 0, 0);
+    cairo_arc(cr, width / 2.0, height / 2.0, MIN(width, height) / 4.0, 0, 2 * G_PI);
+    cairo_fill(cr);
+}
 
 static void draw_callback(GtkDrawingArea *drawing_area, cairo_t *cr, int width, int height, gpointer user_data)
 {
@@ -111,7 +122,7 @@ static void draw_y_component(GtkDrawingArea *drawing_area, cairo_t *cr,
     {
         for (int j = 0; j < app_data->width; j++)
         {
-            Y[i * app_data->width + j] = (unsigned char)(app_data->pixels[i][j].y);
+            Y[i * app_data->width + j] = double_to_uchar(app_data->pixels[i][j].y);
         }
         
     }
@@ -129,7 +140,7 @@ static void draw_cb_component(GtkDrawingArea *drawing_area, cairo_t *cr,
     {
         for (int j = 0; j < app_data->width; j++)
         {
-            Cb[i * app_data->width + j] = (unsigned char)(app_data->pixels[i][j].Cb);
+            Cb[i * app_data->width + j] = double_to_uchar(app_data->pixels[i][j].Cb);
         }    
     }
     
@@ -148,12 +159,47 @@ static void draw_cr_component(GtkDrawingArea *drawing_area, cairo_t *cr,
     {
         for (int j = 0; j < app_data->width; j++)
         {
-            Cr[i * app_data->width + j] = (unsigned char)(app_data->pixels[i][j].Cr);
+            Cr[i * app_data->width + j] = double_to_uchar(app_data->pixels[i][j].Cr);
         }   
     }
 
     draw_colored_component(cr, Cr, app_data->width, app_data->height);
     free(Cr);
+}
+
+static void save_drawing_area_to_png(GtkDrawingArea *area, const char *filename) {
+    int width = gtk_widget_get_width(GTK_WIDGET(area));
+    int height = gtk_widget_get_height(GTK_WIDGET(area));
+
+    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cairo_t *cr = cairo_create(surface);
+
+    draw_func(area, cr, width, height, NULL);
+
+    cairo_surface_write_to_png(surface, filename);
+
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+
+    g_print("Saved DrawingArea to %s\n", filename);
+}
+
+
+static GtkWidget* create_component_widget(const char *label_text, GtkDrawingAreaDrawFunc draw_func, gpointer user_data) {
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    YCbCrImage *app_data = (YCbCrImage*)user_data;
+    GtkWidget *label = gtk_label_new(label_text);
+    gtk_box_append(GTK_BOX(vbox), label);
+
+    GtkWidget *drawing_area = gtk_drawing_area_new();
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing_area), draw_func, user_data, NULL);
+
+    // Fixer une taille raisonnable
+    gtk_widget_set_size_request(drawing_area, app_data->width, app_data->height);
+
+    gtk_box_append(GTK_BOX(vbox), drawing_area);
+
+    return vbox;
 }
 
 static void activateYCbCr(GtkApplication *app, gpointer user_data) 
@@ -163,35 +209,25 @@ static void activateYCbCr(GtkApplication *app, gpointer user_data)
     // Créer la fenêtre principale
     GtkWidget *window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "Visualisation YCbCr");
-    gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
+    gtk_window_set_default_size(GTK_WINDOW(window), 1000, 400);
 
-    // Créer un conteneur notebook (onglets)
-    GtkWidget *notebook = gtk_notebook_new();
-    gtk_window_set_child(GTK_WINDOW(window), notebook);
+    // Conteneur principal horizontal
+    GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_window_set_child(GTK_WINDOW(window), hbox);
 
-    // Onglet pour Y
-    GtkWidget *y_label = gtk_label_new("Composante Y (Luminance)");
-    GtkWidget *y_drawing_area = gtk_drawing_area_new();
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(y_drawing_area), 
-                draw_y_component, app_data, NULL);
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), y_drawing_area, y_label);
+    // Créer les trois widgets composants
+    GtkWidget *y_widget = create_component_widget("Composante Y (Luminance)", draw_y_component, app_data);
+    GtkWidget *cb_widget = create_component_widget("Composante Cb (Chrominance Bleue)", draw_cb_component, app_data);
+    GtkWidget *cr_widget = create_component_widget("Composante Cr (Chrominance Rouge)", draw_cr_component, app_data);
 
-    // Onglet pour Cb
-    GtkWidget *cb_label = gtk_label_new("Composante Cb (Chrominance Bleue)");
-    GtkWidget *cb_drawing_area = gtk_drawing_area_new();
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(cb_drawing_area), 
-                draw_cb_component, app_data, NULL);
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), cb_drawing_area, cb_label);
-
-    // Onglet pour Cr
-    GtkWidget *cr_label = gtk_label_new("Composante Cr (Chrominance Rouge)");
-    GtkWidget *cr_drawing_area = gtk_drawing_area_new();
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(cr_drawing_area), 
-                draw_cr_component, app_data, NULL);
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), cr_drawing_area, cr_label);
+    // Ajouter au conteneur horizontal
+    gtk_box_append(GTK_BOX(hbox), y_widget);
+    gtk_box_append(GTK_BOX(hbox), cb_widget);
+    gtk_box_append(GTK_BOX(hbox), cr_widget);
 
     gtk_window_present(GTK_WINDOW(window));
 }
+
 
 extern void afficher_YCbCr(YCbCrImage* image)
 {
