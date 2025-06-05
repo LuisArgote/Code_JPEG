@@ -79,7 +79,6 @@ static void activate_rgb(GtkApplication *app, gpointer user_data)
 // Fonction pour convertir une valeur double [0,1] en unsigned char [0,255]
 static unsigned char double_to_uchar(double value) 
 {
-    value = value * 255.0;
     if (value < 0) return 0;
     if (value > 255) return 255;
     return (unsigned char)value;

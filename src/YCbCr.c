@@ -10,16 +10,12 @@ YCbCrImage* RGBtoYCbCr(imageRGB* image)
         image_YCbCr->pixels[i] = (YCbCr*)malloc(sizeof(YCbCr) * image->width);
         for (int j = 0; j < image->width; j++)
         {
-            double r = image->image[i][j].red / 255.0;
-            double g = image->image[i][j].green / 255.0;
-            double b = image->image[i][j].blue / 255.0;
-            image_YCbCr->pixels[i][j].y = 0.299 * r + 0.587 * g + 0.114 * b;
-            image_YCbCr->pixels[i][j].Cb = -0.1687 * r - 0.3313 * g + 0.5 * b + 0.5;
-            image_YCbCr->pixels[i][j].Cr = 0.5 * r - 0.4187 * g - 0.0813 * b + 0.5;
-            // Eviter les dépassement
-            image_YCbCr->pixels[i][j].y = (image_YCbCr->pixels[i][j].y < 0) ? 0 : (image_YCbCr->pixels[i][j].y > 1) ? 1 : image_YCbCr->pixels[i][j].y;
-            image_YCbCr->pixels[i][j].Cb = (image_YCbCr->pixels[i][j].Cb < 0) ? 0 : (image_YCbCr->pixels[i][j].Cb > 1) ? 1 : image_YCbCr->pixels[i][j].Cb;
-            image_YCbCr->pixels[i][j].Cr = (image_YCbCr->pixels[i][j].Cr < 0) ? 0 : (image_YCbCr->pixels[i][j].Cr > 1) ? 1 : image_YCbCr->pixels[i][j].Cr;
+            double r = image->image[i][j].red;
+            double g = image->image[i][j].green;
+            double b = image->image[i][j].blue;
+            image_YCbCr->pixels[i][j].y = (uint8_t)(0.299 * r + 0.587 * g + 0.114 * b);
+            image_YCbCr->pixels[i][j].Cb = (uint8_t)(-0.1687 * r - 0.3313 * g + 0.5 * b  + 128);
+            image_YCbCr->pixels[i][j].Cr = (uint8_t)(0.5 * r - 0.4187 * g - 0.0813 * b + 128);
         }
     }
     image_YCbCr->height = image->height;
@@ -39,9 +35,9 @@ imageRGB* YCbCrtoRGB(YCbCrImage* image)
         resultat->image[i] = (color*)malloc(sizeof(color) * image->width);
         for (int j = 0; j < image->width; j++)
         {
-            int y = image->pixels[i][j].y * 255.0;
-            int Cb = image->pixels[i][j].Cb * 255.0;
-            int Cr = image->pixels[i][j].Cr * 255.0;
+            int y = image->pixels[i][j].y;
+            int Cb = image->pixels[i][j].Cb;
+            int Cr = image->pixels[i][j].Cr;
             // Calcul de couleur rouge
             int red = (int)(y + 1.402*(Cr-128));
             if (red > 255)
@@ -92,4 +88,17 @@ imageRGB* YCbCrtoRGB(YCbCrImage* image)
         }
     }
     return resultat;
+}
+
+extern void free_ycbcr_image(YCbCrImage* image)
+{
+    if (image) {
+        if (image->pixels) {
+            for (int i = 0; i < image->height; i++) {
+                free(image->pixels[i]);
+            }
+            free(image->pixels);
+        }
+        free(image);
+    }
 }

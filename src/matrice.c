@@ -42,24 +42,48 @@ static inline double alpha(int u) {
     return (u == 0) ? (1.0 / sqrt(2)) : 1.0;
 }
 
-Matrice8x8 calculer_DCT(const Matrice8x8 *entree) {
-    Matrice8x8 sortie;
-
+Matrice8x8* calculer_DCT(Matrice8x8 *entree) {
+    Matrice8x8* sortie = (Matrice8x8*)malloc(sizeof(Matrice8x8));
     for (int u = 0; u < 8; ++u) {
         for (int v = 0; v < 8; ++v) {
             double somme = 0.0;
 
             for (int x = 0; x < 8; ++x) {
                 for (int y = 0; y < 8; ++y) {
+                    double valeur = entree->data[x][y] - 128.0;
                     double cosx = cos((PI / 8.0) * (x + 0.5) * u);
                     double cosy = cos((PI / 8.0) * (y + 0.5) * v);
-                    somme += entree->data[x][y] * cosx * cosy;
+                    somme += valeur * cosx * cosy;
                 }
             }
-            sortie.data[u][v] = 0.25 * alpha(u) * alpha(v) * somme;
+            sortie->data[u][v] = 0.25 * alpha(u) * alpha(v) * somme;
         }
     }
     return sortie;
+}
+
+Matrice8x8* calculer_DCT_inverse(Matrice8x8* entree)
+{
+    Matrice8x8* resultat = (Matrice8x8*)malloc(sizeof(Matrice8x8));
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            double somme = 0.0;
+            for (int k = 0; k < 8; k++)
+            {
+                for (int l = 0; l < 8; l++)
+                {
+                    double valeur = entree->data[k][l];
+                    double cosx = cos(((2*i + 1)*k*PI)/16);
+                    double cosy = cos(((2*j+1)*l*PI)/16);
+                    somme += alpha(k) * alpha(l) * valeur * cosx * cosy;
+                }
+            }
+            resultat->data[i][j] = (somme / 4) + 128.0;
+        }
+    }
+    return resultat;
 }
 
 // Fonction pour initialiser la matrice avec une valeur
@@ -202,14 +226,12 @@ extern matriceQuantifier* quantification(matriceComposant* composant, Matrice8x8
         fprintf(stderr, "Erreur : 'composant->matrice' est NULL\n");
         return NULL;
     }
-    printf("Vérifications des entrées passées\n");
     matriceQuantifier* sortie = (matriceQuantifier*)malloc(sizeof(matriceQuantifier));
     if (!sortie)
     {
         printf("Erreur dans l'allocation de mémoire\n");
         return NULL;
     }
-    printf("Réussire la prémiere allocation\n");
     sortie->colonnes = composant->colonnes;
     sortie->lignes = composant->lignes;
     sortie->matrices = (Matrice8x8Entier**)malloc(sizeof(Matrice8x8Entier*)*sortie->lignes);
@@ -230,14 +252,14 @@ extern matriceQuantifier* quantification(matriceComposant* composant, Matrice8x8
     return sortie;
 }
 
-extern int* parcours_zigzag(Matrice8x8Entier matrice)
+extern int* parcours_zigzag(Matrice8x8Entier* matrice)
 {
     int* parcours = (int*)malloc(sizeof(int)*64);
     for (int i = 0; i < 64; i++)
     {
         int x = zigzag_order[i][0];
         int y = zigzag_order[i][1];
-        parcours[i] = matrice.data[x][y];
+        parcours[i] = matrice->data[x][y];
     }
     return parcours;
 }
@@ -256,23 +278,85 @@ extern Matrice8x8* obtenirMatriceQuantificationLum(int q)
             
         }
     }
-    if (q<50)
+    else if (q<50)
     {
+        int facteur = 5000/q;
         for (int i = 0; i < 8; i++)
         {
             for (int j = 0; j < 8; j++)
             {
-                resultat->data[i][j] = ((100-q)/50) * q_lum[i][j];
+                resultat->data[i][j] = (facteur * q_lum[i][j] + 50) / 100;
+                if (resultat->data[i][j] < 1)
+                {
+                    resultat->data[i][j] = 1; // Assurer que la valeur ne soit pas inférieure à 1}
+                }
             }
         }
     }
     else
     {
+        int facteur = 200 - 2*q;
         for (int i = 0; i < 8; i++)
         {
             for (int j = 0; j < 8; j++)
             {
-                resultat->data[i][j] = (50/q) * q_lum[i][j];
+                resultat->data[i][j] = (q_lum[i][j] * facteur + 50) / 100;
+                if (resultat->data[i][j] < 1)
+                {
+                    resultat->data[i][j] = 1; // Assurer que la valeur ne soit pas inférieure à 1
+                }
+            }
+        }
+    }
+    return resultat;
+}
+
+extern Matrice8x8* obtenirMatriceQuantificationChrom(int q)
+{
+    if (q < 1 || q > 100)
+    {
+        fprintf(stderr, "Erreur : Valeur de q invalide. Doit être entre 1 et 100.\n");
+        return NULL;
+    }
+    Matrice8x8* resultat = (Matrice8x8*)malloc(sizeof(Matrice8x8));
+    if (q == 50)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                resultat->data[i][j] = q_chrom[i][j];
+            }
+            
+        }
+    }
+    else if (q<50)
+    {
+        int facteur = 5000/q;
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                resultat->data[i][j] =  (q_chrom[i][j] * facteur + 50) / 100;
+                if (resultat->data[i][j] < 1)
+                {
+                    resultat->data[i][j] = 1; // Assurer que la valeur ne soit pas inférieure à 1  
+                }
+            }
+        }
+    }
+    else
+    {
+        int facteur = 200 - 2*q;
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                resultat->data[i][j] = (q_chrom[i][j] * facteur + 50) / 100;
+                if (resultat->data[i][j] < 1)
+                {
+                    resultat->data[i][j] = 1; // Assurer que la valeur ne soit pas inférieure à 1
+                }
             }
         }
     }
@@ -312,5 +396,136 @@ extern void afficher_matrice_8x8(Matrice8x8* matrice)
         }
         printf("]\n");
     }
-    
+}
+
+extern void afficher_matrice_8x8_entier(Matrice8x8Entier* matrice)
+{
+    printf("Afficher Matrice:\n");
+    for (int i = 0; i < 8; i++)
+    {
+        printf("[");
+        for (int j = 0; j < 8; j++)
+        {
+            printf("%d, ", matrice->data[i][j]);
+        }
+        printf("]\n");
+    }
+}
+
+extern void afficher_matrice_quantifier(matriceQuantifier* matrice)
+{
+    for (int i = 0; i < matrice->lignes; i++)
+    {
+        for (int j = 0; j < matrice->colonnes; j++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                printf("[");
+                for (int l = 0; l < 8; l++)
+                {   
+                    printf("%d, ", matrice->matrices[i][j].data[k][l]);
+                }
+                printf("]\n");
+            }        
+        }
+    }
+}
+
+extern matriceComposant* convertir_composant_en_dct(matriceComposant* Composant)
+{
+    matriceComposant* resultat = (matriceComposant*)malloc(sizeof(matriceComposant));
+    resultat->matrice = (Matrice8x8**)malloc(sizeof(Matrice8x8*) * Composant->lignes);
+    resultat->colonnes = Composant->colonnes;
+    resultat->lignes = Composant->lignes;
+    for (int i = 0; i < Composant->lignes; i++)
+    {
+        resultat->matrice[i] = (Matrice8x8*)malloc(sizeof(Matrice8x8) * Composant->colonnes);
+        for (int j = 0; j < Composant->colonnes; j++)
+        {
+            Matrice8x8* dct = calculer_DCT(&(Composant->matrice[i][j]));
+            resultat->matrice[i][j] = *dct;
+        }
+    }
+    return resultat;
+}
+
+extern matriceComposant* dequantification(matriceQuantifier* matrice, Matrice8x8* matriceQuantification)
+{
+    matriceComposant* resultat = (matriceComposant*)malloc(sizeof(matriceComposant));
+    resultat->colonnes = matrice->colonnes;
+    resultat->lignes = matrice->lignes;
+    resultat->matrice = (Matrice8x8**)malloc(sizeof(Matrice8x8*) * resultat->lignes);
+    for (int i = 0; i < resultat->lignes; i++)
+    {
+        resultat->matrice[i] = (Matrice8x8*)malloc(sizeof(Matrice8x8) * resultat->colonnes);
+        for (int j = 0; j < resultat->colonnes; j++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                for (int l = 0; l < 8; l++)
+                {
+                    resultat->matrice[i][j].data[k][l] = matrice->matrices[i][j].data[k][l] *
+                    matriceQuantification->data[k][l];
+                }
+            }
+        }
+    }
+    return resultat;
+}
+
+extern matriceComposant* inverser_dct_matrice(matriceComposant* matrice)
+{
+    matriceComposant* resultat = (matriceComposant*)malloc(sizeof(matriceComposant));
+    resultat->colonnes = matrice->colonnes;
+    resultat->lignes = matrice->lignes;
+    resultat->matrice = (Matrice8x8**)malloc(sizeof(Matrice8x8*) * resultat->lignes);
+    for (int i = 0; i < resultat->lignes; i++)
+    {
+        resultat->matrice[i] = (Matrice8x8*)malloc(sizeof(Matrice8x8) * resultat->colonnes);
+        for (int j = 0; j < resultat->colonnes; j++)
+        {
+            Matrice8x8* dct_inverse = calculer_DCT_inverse(&(matrice->matrice[i][j]));
+            resultat->matrice[i][j] = *dct_inverse;
+        }
+    }
+    return resultat;
+}
+
+extern YCbCrImage* image_from_composant(matriceComposant* Y, matriceComposant* Cb, matriceComposant* Cr)
+{
+    YCbCrImage* resultat = (YCbCrImage*)malloc(sizeof(YCbCrImage));
+    resultat->height = Y->lignes * 8;
+    resultat->width = Y->colonnes * 8;
+    resultat->pixels = (YCbCr**)malloc(sizeof(YCbCr*) * resultat->height);
+    for (int i = 0; i < resultat->height; i++)
+    {
+        resultat->pixels[i] = (YCbCr*)malloc(sizeof(YCbCr) * resultat->width);
+        for (int j = 0; j < resultat->width; j++)
+        {
+            resultat->pixels[i][j].y = Y->matrice[i/8][j/8].data[i%8][j%8];
+            resultat->pixels[i][j].Cb = Cb->matrice[i/8][j/8].data[i%8][j%8];
+            resultat->pixels[i][j].Cr = Cr->matrice[i/8][j/8].data[i%8][j%8];
+        }
+    }
+    return resultat;
+}
+
+extern void free_matriceComposant(matriceComposant* matrice)
+{
+    if (matrice) {
+        if (matrice->matrice) {
+            for (int i = 0; i < matrice->lignes; i++) {
+                free(matrice->matrice[i]);
+            }
+            free(matrice->matrice);
+        }
+        free(matrice);
+    }
+}
+
+extern void free_matrice_8x8(Matrice8x8* matrice)
+{
+    if (matrice) {
+        free(matrice);
+    }
 }

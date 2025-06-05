@@ -2,11 +2,12 @@
 #define YCBCR_H 
 
 #include <stdio.h>
+#include<stdint.h>
 #include "imageRGB.h"
 
 // Structure pour représenter un pixel YCbCr
 typedef struct {
-    double y, Cb, Cr;
+    uint8_t y, Cb, Cr;
 } YCbCr;
 
 // Structure pour représenter une image YCbCr

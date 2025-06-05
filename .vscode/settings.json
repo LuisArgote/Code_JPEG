@@ -63,6 +63,11 @@
     "matrice.h": "c",
     "gtk.h": "c",
     "graphique.h": "c",
-    "gtkcss.h": "c"
+    "gtkcss.h": "c",
+    "ac_dc.h": "c",
+    "color.h": "c",
+    "huffman.h": "c",
+    "stdlib.h": "c",
+    "jpeg.h": "c"
   }
 }
