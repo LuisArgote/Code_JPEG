@@ -2,6 +2,7 @@
 #include <gtk-4.0/gtk/gtk.h>
 #include<cairo.h>
 #include<graphene-1.0/graphene-gobject.h>
+#include"jpeg.h"
 
 // Définition de draw_func
 static void draw_func(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer user_data) {
@@ -242,4 +243,71 @@ extern void afficher_rgb(imageRGB* image)
     g_signal_connect(app, "activate", G_CALLBACK (activate_rgb), image);
     g_application_run (G_APPLICATION (app), 0, NULL);
     g_object_unref(app);   
+}
+
+
+static void activate_compression(GtkApplication *app, gpointer user_data) {
+    CompressionData *data = (CompressionData *)user_data;
+    GtkWidget *window = gtk_application_window_new(app);
+    gtk_window_set_title(GTK_WINDOW(window), "Difference entre l'image originale et l'image compressée");
+    gtk_window_set_default_size(GTK_WINDOW(window), data->image->width * 2 + 60, data->image->height + 100);
+
+    // Créer un conteneur vertical
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_widget_set_margin_top(box, 12);
+    gtk_widget_set_margin_bottom(box, 12);
+    gtk_widget_set_margin_start(box, 12);
+    gtk_widget_set_margin_end(box, 12);
+
+
+    // Créer l'étiquette initiale
+    char label_text[50];
+    snprintf(label_text, sizeof(label_text), "Q = %d", data->q);
+    GtkWidget *label = gtk_label_new(label_text);
+
+    // Creer un box horizontal pour les images
+    GtkWidget *image_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+
+    // Créer une zone de dessin
+    GtkWidget *drawing_area = gtk_drawing_area_new();
+    gtk_box_append(GTK_BOX(image_box), drawing_area);
+
+    
+    
+    
+    // Connecter le callback de dessin
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing_area), 
+                                 draw_callback, 
+                                 data->image, 
+                                 NULL);
+    
+    imageRGB *compressed_image = decompression_jpeg(compreser_image(data->image, data->q));
+    GtkWidget *compressed_drawing_area = gtk_drawing_area_new();
+    gtk_box_append(GTK_BOX(image_box), compressed_drawing_area);
+    // Connecter le callback de dessin pour l'image compressée
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(compressed_drawing_area), 
+                                 draw_callback, 
+                                 compressed_image, 
+                                 NULL);
+
+    gtk_widget_set_size_request(drawing_area, data->image->width, data->image->height);
+    gtk_widget_set_size_request(compressed_drawing_area, compressed_image->width, compressed_image->height);
+    // Ajouter le box d'images au box principal
+    gtk_box_append(GTK_BOX(box), image_box);
+    
+    // Ajouter les widgets
+    gtk_box_append(GTK_BOX(box), label);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    gtk_window_present(GTK_WINDOW(window));
+}
+
+extern void afficher_compression(imageRGB* image, int q) 
+{
+    CompressionData* data = (CompressionData*)malloc(sizeof(CompressionData));
+    data->image = image;
+    data->q = q;
+    GtkApplication *app = gtk_application_new("org.example.slider", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(app, "activate", G_CALLBACK(activate_compression), data);
+    int status = g_application_run(G_APPLICATION(app), 0, NULL);
+    g_object_unref(app);
 }

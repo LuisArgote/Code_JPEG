@@ -14,7 +14,7 @@ CFLAGS += -Iinclude -Isrc  # Cherche les headers dans include/ et src/
 TARGET = my_program
 
 # Fichiers sources
-SRCS = src/main.c src/imageRGB.c src/matrice.c src/YCbCr.c src/graphique.c src/AC_DC.c
+SRCS = src/main.c src/imageRGB.c src/matrice.c src/YCbCr.c src/graphique.c src/AC_DC.c src/RRSS.c src/huffman.c src/jpeg.c
 
 # Fichiers objets
 OBJS = $(SRCS:.c=.o)
