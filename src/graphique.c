@@ -122,7 +122,7 @@ static void draw_y_component(GtkDrawingArea *drawing_area, cairo_t *cr,
     {
         for (int j = 0; j < app_data->width; j++)
         {
-            Y[i * app_data->width + j] = double_to_uchar(app_data->pixels[i][j].y);
+            Y[i * app_data->width + j] = 255 - double_to_uchar(app_data->pixels[i][j].y);
         }
         
     }
@@ -140,7 +140,7 @@ static void draw_cb_component(GtkDrawingArea *drawing_area, cairo_t *cr,
     {
         for (int j = 0; j < app_data->width; j++)
         {
-            Cb[i * app_data->width + j] = double_to_uchar(app_data->pixels[i][j].Cb);
+            Cb[i * app_data->width + j] = 255 - double_to_uchar(app_data->pixels[i][j].Cb);
         }    
     }
     
@@ -159,7 +159,8 @@ static void draw_cr_component(GtkDrawingArea *drawing_area, cairo_t *cr,
     {
         for (int j = 0; j < app_data->width; j++)
         {
-            Cr[i * app_data->width + j] = double_to_uchar(app_data->pixels[i][j].Cr);
+            // Nous avons inverser le noir et le blanc pour que le rouge soit visible
+            Cr[i * app_data->width + j] = 255 - double_to_uchar(app_data->pixels[i][j].Cr);
         }   
     }
 
@@ -308,6 +309,100 @@ extern void afficher_compression(imageRGB* image, int q)
     data->q = q;
     GtkApplication *app = gtk_application_new("org.example.slider", G_APPLICATION_DEFAULT_FLAGS);
     g_signal_connect(app, "activate", G_CALLBACK(activate_compression), data);
+    int status = g_application_run(G_APPLICATION(app), 0, NULL);
+    g_object_unref(app);
+}
+
+static void differentes_compression(GtkApplication *app, gpointer user_data) 
+{
+    imageRGB *image = (imageRGB *)user_data;
+    GtkWidget *window = gtk_application_window_new(app);
+    gtk_window_set_title(GTK_WINDOW(window), "Différences de compression");
+    gtk_window_set_default_size(GTK_WINDOW(window), image->width * 2 + 60, image->height + 100);
+
+    // Créer un conteneur vertical
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    gtk_widget_set_margin_top(box, 1);
+    gtk_widget_set_margin_bottom(box, 1);
+    gtk_widget_set_margin_start(box, 1);
+    gtk_widget_set_margin_end(box, 1);
+
+    // Creer un box pour Q = 10 et Q= 30
+    GtkWidget *q10et30_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(box), q10et30_box);
+    // Creer un conteneur vertical pour l'image q = 10
+    GtkWidget *q10_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(q10et30_box), q10_box);
+    // Créer l'étiquette pour q = 10
+    GtkWidget *label_q10 = gtk_label_new("Q = 10");
+    gtk_box_append(GTK_BOX(q10_box), label_q10);
+
+    // Créer l'image pour q = 10
+    GtkWidget *drawing_area_q10 = gtk_drawing_area_new();
+    imageRGB *image_q10 = decompression_jpeg(compreser_image(image, 10));
+    gtk_widget_set_size_request(drawing_area_q10, image_q10->width, image_q10->height);
+    gtk_box_append(GTK_BOX(q10_box), drawing_area_q10);
+    // Connecter le callback de dessin pour l'image q = 10
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing_area_q10), 
+                                 draw_callback, 
+                                 image_q10, 
+                                 NULL);
+    // Pour Q = 30
+    GtkWidget *q30_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(q10et30_box), q30_box);
+    GtkWidget *label_q30 = gtk_label_new("Q = 30");
+    gtk_box_append(GTK_BOX(q30_box), label_q30);
+    GtkWidget *drawing_area_q30 = gtk_drawing_area_new();
+    imageRGB *image_q30 = decompression_jpeg(compreser_image(image, 30));
+    gtk_widget_set_size_request(drawing_area_q30, image_q30->width, image_q30->height);
+    gtk_box_append(GTK_BOX(q30_box), drawing_area_q30);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing_area_q30), 
+                                   draw_callback, 
+                                   image_q30, 
+                                   NULL);
+
+    // Creer une box pour Q = 50 et Q = 70
+    GtkWidget *q50et70_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(box), q50et70_box);
+    // Pour Q = 50
+    GtkWidget *q50_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(q50et70_box), q50_box);
+    GtkWidget *label_q50 = gtk_label_new("Q = 50");
+    gtk_box_append(GTK_BOX(q50_box), label_q50);
+    GtkWidget *drawing_area_q50 = gtk_drawing_area_new();
+    imageRGB *image_q50 = decompression_jpeg(compreser_image(image, 50));
+    gtk_widget_set_size_request(drawing_area_q50, image_q50->width, image_q50->height);
+    gtk_box_append(GTK_BOX(q50_box), drawing_area_q50);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing_area_q50), 
+                                   draw_callback, 
+                                   image_q50, 
+                                   NULL);
+
+    // Pour Q = 70
+    GtkWidget *q70_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+    gtk_box_append(GTK_BOX(q50et70_box), q70_box);
+    GtkWidget *label_q70 = gtk_label_new("Q = 70");
+    gtk_box_append(GTK_BOX(q70_box), label_q70);
+    GtkWidget *drawing_area_q70 = gtk_drawing_area_new();
+    imageRGB *image_q70 = decompression_jpeg(compreser_image(image, 70));
+    gtk_widget_set_size_request(drawing_area_q70, image_q70->width, image_q70->height);
+    gtk_box_append(GTK_BOX(q70_box), drawing_area_q70);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(drawing_area_q70), 
+                                   draw_callback, 
+                                   image_q70, 
+                                   NULL);
+
+    // Ajouter le box principal à la fenêtre
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    
+    // Afficher la fenêtre
+    gtk_window_present(GTK_WINDOW(window));
+}
+
+extern void afficher_differences_qualite(imageRGB *image) 
+{
+    GtkApplication *app = gtk_application_new("org.example.slider", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(app, "activate", G_CALLBACK(differentes_compression), image);
     int status = g_application_run(G_APPLICATION(app), 0, NULL);
     g_object_unref(app);
 }

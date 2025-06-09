@@ -36,4 +36,10 @@ void afficher_image(imageRGB* image);
  * @param image image à libérer
  */
 void free_imageRGB(imageRGB* image);
+
+/**
+ * @brief Aligner taille de l'image pour qu'il soit multiple de 8
+ * 
+ */
+imageRGB* aligner_taille_image(imageRGB* image);
 #endif // imageRGB

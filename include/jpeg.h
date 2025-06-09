@@ -22,4 +22,10 @@ jpeg* compreser_image(imageRGB* image, int q);
 
 imageRGB* decompression_jpeg(jpeg* image);
 
+/**
+ * @brief Libère la mémoire allouée pour l'image JPEG
+ * @param image Image JPEG à libérer
+ */
+void free_jpeg(jpeg* image);
+
 #endif

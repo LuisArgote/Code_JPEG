@@ -162,3 +162,137 @@ extern void afficher_arbre(arbre* a, int nombre)
     }
 }
 
+extern int profondeur_arbre(arbre* a)
+{
+    if (a == NULL)
+    {
+        return 0;
+    }
+    int gauche = profondeur_arbre(a->sousArbreGauche);
+    int droite = profondeur_arbre(a->sousArbreDroite);
+    return (gauche > droite ? gauche : droite) + 1;
+}
+
+void remplir_code_huffman(arbre* a, char* code, int profondeur, huffman_liste* liste)
+{
+    if (a == NULL)
+    {
+        return;
+    }
+    if (!a->vide)
+    {
+        // Ajouter le code à la liste
+        huffman_liste* nouveau = (huffman_liste*)malloc(sizeof(huffman_liste));
+        nouveau->etiquette = a->etiquette;
+        nouveau->code = (char*)malloc(sizeof(char) * profondeur);
+        nouveau->taille = profondeur;
+        for (int i = 0; i < profondeur; i++)
+        {
+            nouveau->code[i] = code[i];
+        }
+        nouveau->code[profondeur] = '\0';
+        if (liste->etiquette == NULL)
+        {
+            liste->etiquette = nouveau->etiquette;
+            liste->code = nouveau->code;
+            liste->suivant = NULL;
+        }
+        else
+        {
+            huffman_liste* temp = liste;
+            while (temp->suivant != NULL)
+            {
+                temp = temp->suivant;
+            }
+            temp->suivant = nouveau;
+            nouveau->suivant = NULL;
+        }
+        return;
+        
+    }
+    code[profondeur] = '0';
+    remplir_code_huffman(a->sousArbreGauche, code, profondeur + 1, liste);
+    code[profondeur] = '1';
+    remplir_code_huffman(a->sousArbreDroite, code, profondeur + 1, liste);
+}
+
+extern huffman_liste* creer_huffman_liste(arbre* arbre_huffman)
+{
+    huffman_liste* arbre_liste = (huffman_liste*)malloc(sizeof(huffman_liste));
+    arbre_liste->etiquette = NULL;
+    int profondeur = profondeur_arbre(arbre_huffman);
+    arbre_liste->code = NULL;
+    char* code = (char*)malloc(sizeof(char) * (profondeur + 1));
+    code[profondeur] = '\0';
+    arbre_liste->suivant = NULL;
+    remplir_code_huffman(arbre_huffman, code, 0, arbre_liste);
+    free(code);
+    return arbre_liste;
+}
+
+char* trouver_code(huffman_liste* liste, RRSS* encoder, int* taille)
+{
+    huffman_liste* temp = liste;
+    while (temp != NULL)
+    {
+        if (comparer_RRSS(temp->etiquette, encoder))
+        {
+            *taille = temp->taille;
+            return temp->code; // Trouver le code
+        }
+        temp = temp->suivant;
+    }
+    return NULL; // Non trouver
+}
+
+void encoder_sequence(char* sequence, int taille, FILE* fichier)
+{
+    unsigned char buffer = 0;
+    int bit_count = 0;
+
+    for (int i = 0; i < taille; i++) {
+        buffer = (buffer << 1) | (sequence[i] == '1' ? 1 : 0);
+        bit_count++;
+        if (bit_count == 8) {
+            fputc(buffer, fichier);
+            buffer = 0;
+            bit_count = 0;
+        }
+    }
+    // Écrire les bits restants (compléter à gauche)
+    if (bit_count > 0) {
+        buffer <<= (8 - bit_count);
+        fputc(buffer, fichier);
+    }
+}
+
+extern void enregistrer_fichier_compresser(ac* tableau, const char* nom_fichier)
+{
+    FILE* fichier = fopen(nom_fichier, "wb");
+    if (fichier == NULL)
+    {
+        perror("Erreur lors de l'ouverture du fichier");
+        return;
+    }
+    huffman_liste* liste_huffman = creer_huffman_liste(genererArbreHuffmanAC(tableau));
+    if (liste_huffman == NULL)
+    {
+        printf("Erreur lors de la création de la liste Huffman.\n");
+        fclose(fichier);
+        return;
+    }
+    for (int i = 0; i < tableau->taille_tableau; i++)
+    {
+        int taille;
+        char* code = trouver_code(liste_huffman, calculer_RRSS(tableau->taille[i], tableau->valeur[i]), &taille);
+        if (code == NULL)
+        {            
+            printf("Erreur: Code Huffman non trouvé pour la valeur %d avec taille %d.\n", tableau->valeur[i], tableau->taille[i]);
+            fclose(fichier);
+            return;
+        }
+        encoder_sequence(code, taille, fichier);
+    }
+    
+    fclose(fichier);
+}

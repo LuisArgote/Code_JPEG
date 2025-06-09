@@ -72,3 +72,39 @@ void free_imageRGB(imageRGB* image)
     free(image->image);
     free(image);
 }
+
+extern imageRGB* aligner_taille_image(imageRGB* image)
+{
+    if (image->width % 8 != 0 || image->height % 8 != 0)
+    {
+        int new_width = image->width - image->width % 8; // Arrondir à la prochaine multiple de 8
+        int new_height = image->height - image->height % 8; // Arrondir à la prochaine multiple de 8
+        imageRGB* new_image = (imageRGB*)malloc(sizeof(imageRGB));
+        new_image->width = new_width;
+        new_image->height = new_height;
+        new_image->maxval = image->maxval;
+        new_image->image = (color**)malloc(sizeof(color*) * new_height);
+        
+        for (int i = 0; i < new_height; i++)
+        {
+            new_image->image[i] = (color*)malloc(sizeof(color) * new_width);
+            for (int j = 0; j < new_width; j++)
+            {
+                if (i < image->height && j < image->width)
+                {
+                    new_image->image[i][j] = image->image[i][j];
+                }
+                else
+                {
+                    // Remplir avec des pixels noirs si on dépasse les dimensions originales
+                    new_image->image[i][j].red = 0;
+                    new_image->image[i][j].green = 0;
+                    new_image->image[i][j].blue = 0;
+                }
+            }
+        }
+        free_imageRGB(image); // Libérer l'ancienne image
+        return new_image;
+    }
+    return image; // Si déjà aligné, retourner l'image originale
+}

@@ -31,7 +31,7 @@ ac* obtenir_ac_de_composant(matriceQuantifier* matrice);
 ac* obtenir_ac_de_matrice(Matrice8x8Entier* matrice);
 
 /***
- * @brief afficher les valeurs de l'estructure AC_DC
+ * @brief afficher les valeurs de l'estructure AC
  * @param imprimer structure à afficher ses valeurs
  */
 void print_ac(ac* imprimer);
@@ -48,4 +48,6 @@ dc* obtenir_dc_de_composant(matriceQuantifier* matrice);
  * @param imprimer structure dc à imprimer
  */
 void print_dc(dc* imprimer);
+
+void free_ac(ac* ac_to_free);
 #endif

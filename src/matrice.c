@@ -529,3 +529,16 @@ extern void free_matrice_8x8(Matrice8x8* matrice)
         free(matrice);
     }
 }
+
+extern void free_matriceQuantifier(matriceQuantifier* matrice)
+{
+    if (matrice) {
+        if (matrice->matrices) {
+            for (int i = 0; i < matrice->lignes; i++) {
+                free(matrice->matrices[i]);
+            }
+            free(matrice->matrices);
+        }
+        free(matrice);
+    }
+}

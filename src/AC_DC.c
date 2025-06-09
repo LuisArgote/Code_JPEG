@@ -132,3 +132,19 @@ extern void print_dc(dc* imprimer)
     }
     printf("]\n");
 }
+
+extern void free_ac(ac* ac_to_free)
+{
+    if (ac_to_free)
+    {
+        if (ac_to_free->valeur)
+        {
+            free(ac_to_free->valeur);
+        }
+        if (ac_to_free->taille)
+        {
+            free(ac_to_free->taille);
+        }
+        free(ac_to_free);
+    }
+}

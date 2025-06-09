@@ -68,6 +68,9 @@
     "color.h": "c",
     "huffman.h": "c",
     "stdlib.h": "c",
-    "jpeg.h": "c"
+    "jpeg.h": "c",
+    "main.C": "cpp",
+    "analyse.h": "c",
+    "jpeglib.h": "c"
   }
 }

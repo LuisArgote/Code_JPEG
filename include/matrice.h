@@ -169,4 +169,10 @@ void free_matriceComposant(matriceComposant* matrice);
  */
 void free_matrice_8x8(Matrice8x8* matrice);
 
+/**
+ * @brief Libérer la mémoire allouée pour une matrice quantifier
+ * @param matrice Matrice à libérer
+ */
+void free_matriceQuantifier(matriceQuantifier* matrice);
+
 #endif

@@ -20,6 +20,14 @@ typedef struct liste_arbres
     struct liste_arbres* suivant;
 }liste_arbres;
 
+typedef struct huffman_liste
+{
+    RRSS* etiquette;
+    char* code; // Code Huffman
+    int taille;
+    struct huffman_liste* suivant;
+}huffman_liste;
+
 /**
  * @brief Générer Arbre Huffman
  * @param tableau Tableau avec les coefficients AC
@@ -68,5 +76,27 @@ liste_arbres* fusionne(liste_arbres* liste);
  * @param a arbre a afficher
  */
 void afficher_arbre(arbre* a, int nombre);
+
+/**
+ * @brief Calculer la profondeur d'un arbre
+ * @param a Arbre dont on veut calculer la profondeur
+ * @return La profondeur de l'arbre
+ */
+int profondeur_arbre(arbre* a);
+
+/**
+ * @brief Créer une liste de Huffman à partir d'une liste d'occurrences
+ * @param arbre_huffman Arbre de Huffman
+ * @return Liste de Huffman
+ */
+huffman_liste* creer_huffman_liste(arbre* arbre_huffman);
+
+
+/**
+ * @brief enregistre les séquences de Huffman dans un fichier
+ * @param tableau_ac 
+ * @param nom_fichier Nom du fichier dans lequel on va enregistrer les séquences
+ */
+void enregistrer_fichier_compresser(ac* tableau_ac, const char* nom_fichier);
 
 #endif

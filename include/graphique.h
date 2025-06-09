@@ -25,4 +25,10 @@ void afficher_YCbCr(YCbCrImage* image);
  * @param image image à afficher
  */
 void afficher_compression(imageRGB *image, int q);
+
+/**
+ * @brief Afficher l'image compressée dans des différentes qualités
+ * @param image image à afficher
+ */
+void afficher_differences_qualite(imageRGB *image);
 #endif

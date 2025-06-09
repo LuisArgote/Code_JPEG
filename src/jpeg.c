@@ -62,3 +62,16 @@ extern imageRGB* decompression_jpeg(jpeg* image)
     free_matriceComposant(ComposantCrdequantifier);
     return image_final;
 }
+
+extern void free_jpeg(jpeg* image)
+{
+    if (!image) {
+        return; // Rien à libérer si l'image est NULL
+    }
+    free_matriceQuantifier(image->ComposantY);
+    free_matriceQuantifier(image->ComposantCb);
+    free_matriceQuantifier(image->ComposantCr);
+    free_matrice_8x8(image->matriceDeQuantificationY);
+    free_matrice_8x8(image->matriceDeQuantificationChorminence);
+    free(image);
+}
