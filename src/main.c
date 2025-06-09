@@ -35,8 +35,6 @@ int main(int argc, char const *argv[])
     }
     enregistrer_taille_fichier_dans_csv(taille_fichier);
 
-    // Modificalo para no usar libreria externa
-    // Y especifica que solo guardaste el AC del Y
 
     tri_fusion(taille_fichier, 0, indice - 1);
     afficher_taille_cropped(taille_fichier);
